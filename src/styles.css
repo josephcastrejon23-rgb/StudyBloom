@@ -389,6 +389,7 @@ h2 {
   border: 1px solid #f0e4ea;
   border-radius: 21px;
   overflow: hidden;
+  padding-bottom: 30px;
 }
 
 .course-main {
@@ -431,10 +432,22 @@ h2 {
   color: #b1a2ad;
 }
 
-.delete-course {
+/* Acciones de editar y eliminar en las tarjetas */
+.course-card-actions {
   position: absolute;
-  right: 13px;
+  right: 12px;
   bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.course-card-actions .icon-button:hover {
+  background: #f2e7f5;
+  color: #765b7d;
+}
+
+.delete-course {
   border: 0;
   background: transparent;
   color: #b493a3;
@@ -482,6 +495,7 @@ h2 {
   font-weight: 700;
 }
 
+/* Encabezado del curso */
 .course-header {
   display: flex;
   align-items: center;
@@ -489,6 +503,11 @@ h2 {
   padding: 30px;
   border: 1px solid #f0e4ea;
   border-radius: 25px;
+}
+
+.course-header-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .course-header h1 {
@@ -503,11 +522,17 @@ h2 {
 .course-header-icon {
   width: 65px;
   height: 65px;
+  flex: 0 0 auto;
   display: grid;
   place-items: center;
   border-radius: 20px;
   color: #765b7d;
   background: rgba(255, 255, 255, 0.65);
+}
+
+.course-edit-button {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .quick-actions {
@@ -822,6 +847,22 @@ h2 {
   outline: 0;
 }
 
+/* Preview del curso mientras se edita */
+.edit-course-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  margin-top: 2px;
+  border-radius: 16px;
+  color: #554453;
+  transition: background 0.2s ease;
+}
+
+.edit-course-preview svg {
+  flex-shrink: 0;
+}
+
 .modal-background {
   position: fixed;
   inset: 0;
@@ -931,6 +972,16 @@ h2 {
     align-items: flex-start;
     flex-direction: column;
   }
+
+  .course-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 24px;
+  }
+
+  .course-edit-button {
+    width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -948,5 +999,15 @@ h2 {
 
   .hero-actions button {
     width: 100%;
+  }
+
+  .course-header-icon {
+    width: 55px;
+    height: 55px;
+  }
+
+  .course-card-actions {
+    right: 9px;
+    bottom: 8px;
   }
 }
