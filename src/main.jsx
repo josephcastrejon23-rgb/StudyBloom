@@ -8,9 +8,9 @@ import {
   ChevronRight,
   FileText,
   Heart,
-  ImagePlus,
   Lightbulb,
   Menu,
+  Pencil,
   Plus,
   Search,
   Sparkles,
@@ -52,34 +52,85 @@ function loadData() {
 
 function App() {
   const [data, setData] = useState(loadData);
+
   const [page, setPage] = useState("home");
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [search, setSearch] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // =========================
+  // CREAR CURSO
+  // =========================
+
   const [showCourseModal, setShowCourseModal] = useState(false);
-  const [showMaterialModal, setShowMaterialModal] = useState(false);
 
   const [courseName, setCourseName] = useState("");
   const [courseColor, setCourseColor] = useState("#e9d8f4");
 
-  const [materialTitle, setMaterialTitle] = useState("");
-  const [materialTopic, setMaterialTopic] = useState("");
-  const [materialType, setMaterialType] = useState("Apunte");
+  // =========================
+  // EDITAR CURSO
+  // =========================
+
+  const [showEditCourseModal, setShowEditCourseModal] =
+    useState(false);
+
+  const [editingCourseId, setEditingCourseId] =
+    useState(null);
+
+  const [editCourseName, setEditCourseName] =
+    useState("");
+
+  const [editCourseColor, setEditCourseColor] =
+    useState("#e9d8f4");
+
+  // =========================
+  // MATERIALES
+  // =========================
+
+  const [showMaterialModal, setShowMaterialModal] =
+    useState(false);
+
+  const [materialTitle, setMaterialTitle] =
+    useState("");
+
+  const [materialTopic, setMaterialTopic] =
+    useState("");
+
+  const [materialType, setMaterialType] =
+    useState("Apunte");
+
+  // =========================
+  // GUARDAR DATOS
+  // =========================
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(data)
+    );
   }, [data]);
+
+  // =========================
+  // CURSO ACTUAL
+  // =========================
 
   const course = useMemo(
     () =>
-      data.courses.find((item) => item.id === selectedCourse) || null,
+      data.courses.find(
+        (item) => item.id === selectedCourse
+      ) || null,
     [data.courses, selectedCourse]
   );
 
   const filteredCourses = data.courses.filter((item) =>
-    item.name.toLowerCase().includes(search.toLowerCase())
+    item.name
+      .toLowerCase()
+      .includes(search.toLowerCase())
   );
+
+  // =========================
+  // CREAR CURSO
+  // =========================
 
   function createCourse() {
     if (!courseName.trim()) return;
@@ -93,7 +144,10 @@ function App() {
 
     setData((current) => ({
       ...current,
-      courses: [...current.courses, newCourse]
+      courses: [
+        ...current.courses,
+        newCourse
+      ]
     }));
 
     setCourseName("");
@@ -104,23 +158,78 @@ function App() {
     setPage("course");
   }
 
+  // =========================
+  // ABRIR EDICIÓN DE CURSO
+  // =========================
+
+  function openEditCourse(course) {
+    setEditingCourseId(course.id);
+    setEditCourseName(course.name);
+    setEditCourseColor(course.color);
+    setShowEditCourseModal(true);
+  }
+
+  // =========================
+  // GUARDAR CAMBIOS DEL CURSO
+  // =========================
+
+  function saveCourseChanges() {
+    if (
+      !editCourseName.trim() ||
+      !editingCourseId
+    ) {
+      return;
+    }
+
+    setData((current) => ({
+      ...current,
+      courses: current.courses.map((course) =>
+        course.id === editingCourseId
+          ? {
+              ...course,
+              name: editCourseName.trim(),
+              color: editCourseColor
+            }
+          : course
+      )
+    }));
+
+    setShowEditCourseModal(false);
+    setEditingCourseId(null);
+    setEditCourseName("");
+    setEditCourseColor("#e9d8f4");
+  }
+
+  // =========================
+  // ELIMINAR CURSO
+  // =========================
+
   function deleteCourse(id) {
     const confirmed = window.confirm(
-      "¿Seguro que quieres eliminar este curso?"
+      "¿Seguro que quieres eliminar este curso? También se eliminarán sus materiales, notas, flashcards y preguntas."
     );
 
     if (!confirmed) return;
 
     setData((current) => ({
       ...current,
-      courses: current.courses.filter((course) => course.id !== id),
+
+      courses: current.courses.filter(
+        (course) => course.id !== id
+      ),
+
       materials: current.materials.filter(
         (material) => material.courseId !== id
       ),
-      notes: current.notes.filter((note) => note.courseId !== id),
+
+      notes: current.notes.filter(
+        (note) => note.courseId !== id
+      ),
+
       flashcards: current.flashcards.filter(
         (card) => card.courseId !== id
       ),
+
       questions: current.questions.filter(
         (question) => question.courseId !== id
       )
@@ -132,14 +241,20 @@ function App() {
     }
   }
 
+  // =========================
+  // AGREGAR MATERIAL
+  // =========================
+
   function addMaterial(file) {
     if (!course || !file) return;
 
     const newMaterial = {
       id: crypto.randomUUID(),
       courseId: course.id,
-      title: materialTitle.trim() || file.name,
-      topic: materialTopic.trim() || "Sin clasificar",
+      title:
+        materialTitle.trim() || file.name,
+      topic:
+        materialTopic.trim() || "Sin clasificar",
       type: materialType,
       fileName: file.name,
       fileType: file.type,
@@ -148,7 +263,10 @@ function App() {
 
     setData((current) => ({
       ...current,
-      materials: [...current.materials, newMaterial]
+      materials: [
+        ...current.materials,
+        newMaterial
+      ]
     }));
 
     setMaterialTitle("");
@@ -156,6 +274,10 @@ function App() {
     setMaterialType("Apunte");
     setShowMaterialModal(false);
   }
+
+  // =========================
+  // AGREGAR NOTA
+  // =========================
 
   function addNote(text) {
     if (!course || !text.trim()) return;
@@ -169,9 +291,16 @@ function App() {
 
     setData((current) => ({
       ...current,
-      notes: [...current.notes, note]
+      notes: [
+        ...current.notes,
+        note
+      ]
     }));
   }
+
+  // =========================
+  // ELIMINAR MATERIAL
+  // =========================
 
   function removeMaterial(id) {
     setData((current) => ({
@@ -184,10 +313,16 @@ function App() {
 
   return (
     <div className="app">
+      {/* =========================
+          BARRA SUPERIOR
+      ========================= */}
+
       <header className="topbar">
         <button
           className="icon-button mobile-menu"
-          onClick={() => setMenuOpen(!menuOpen)}
+          onClick={() =>
+            setMenuOpen(!menuOpen)
+          }
         >
           <Menu size={21} />
         </button>
@@ -205,31 +340,48 @@ function App() {
 
           <div>
             <strong>StudyBloom</strong>
-            <span>Tu espacio para aprender</span>
+            <span>
+              Tu espacio para aprender
+            </span>
           </div>
         </button>
 
         <div className="search">
           <Search size={18} />
+
           <input
             placeholder="Buscar cursos..."
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
           />
         </div>
 
         <button
           className="profile"
-          onClick={() => setPage("profile")}
+          onClick={() =>
+            setPage("profile")
+          }
         >
           {data.profile.name
-            ? data.profile.name.charAt(0).toUpperCase()
+            ? data.profile.name
+                .charAt(0)
+                .toUpperCase()
             : "♡"}
         </button>
       </header>
 
       <div className="layout">
-        <aside className={`sidebar ${menuOpen ? "open" : ""}`}>
+        {/* =========================
+            SIDEBAR
+        ========================= */}
+
+        <aside
+          className={`sidebar ${
+            menuOpen ? "open" : ""
+          }`}
+        >
           <nav>
             <NavItem
               icon={<Sparkles size={19} />}
@@ -295,55 +447,96 @@ function App() {
           <div className="sidebar-bottom">
             <div className="little-card">
               <Heart size={17} />
+
               <div>
-                <strong>Estudia a tu ritmo</strong>
-                <span>Pequeños pasos también cuentan.</span>
+                <strong>
+                  Estudia a tu ritmo
+                </strong>
+
+                <span>
+                  Pequeños pasos también cuentan.
+                </span>
               </div>
             </div>
           </div>
         </aside>
+
+        {/* =========================
+            CONTENIDO
+        ========================= */}
 
         <main className="content">
           {page === "home" && (
             <Home
               data={data}
               setPage={setPage}
-              setShowCourseModal={setShowCourseModal}
-              setSelectedCourse={setSelectedCourse}
+              setShowCourseModal={
+                setShowCourseModal
+              }
+              setSelectedCourse={
+                setSelectedCourse
+              }
+              onEditCourse={
+                openEditCourse
+              }
             />
           )}
 
           {page === "courses" && (
             <Courses
               courses={filteredCourses}
-              setSelectedCourse={setSelectedCourse}
+              data={data}
+              setSelectedCourse={
+                setSelectedCourse
+              }
               setPage={setPage}
-              setShowCourseModal={setShowCourseModal}
+              setShowCourseModal={
+                setShowCourseModal
+              }
               deleteCourse={deleteCourse}
+              onEditCourse={
+                openEditCourse
+              }
             />
           )}
 
-          {page === "course" && course && (
-            <CoursePage
-              course={course}
-              data={data}
-              setPage={setPage}
-              setShowMaterialModal={setShowMaterialModal}
-              addNote={addNote}
-              removeMaterial={removeMaterial}
-            />
-          )}
+          {page === "course" &&
+            course && (
+              <CoursePage
+                course={course}
+                data={data}
+                setPage={setPage}
+                setShowMaterialModal={
+                  setShowMaterialModal
+                }
+                addNote={addNote}
+                removeMaterial={
+                  removeMaterial
+                }
+                onEditCourse={
+                  openEditCourse
+                }
+              />
+            )}
 
           {page === "study" && (
-            <StudyPage data={data} setPage={setPage} />
+            <StudyPage
+              data={data}
+              setPage={setPage}
+            />
           )}
 
           {page === "quizzes" && (
-            <QuizPage data={data} setPage={setPage} />
+            <QuizPage
+              data={data}
+              setPage={setPage}
+            />
           )}
 
           {page === "flashcards" && (
-            <FlashcardsPage data={data} />
+            <FlashcardsPage
+              data={data}
+            />
           )}
 
           {page === "planner" && (
@@ -359,139 +552,292 @@ function App() {
         </main>
       </div>
 
+      {/* =========================
+          MODAL CREAR CURSO
+      ========================= */}
+
       {showCourseModal && (
         <Modal
           title="Crear un nuevo curso"
-          close={() => setShowCourseModal(false)}
+          close={() =>
+            setShowCourseModal(false)
+          }
         >
           <div className="form">
             <label>
               Nombre del curso
+
               <input
                 autoFocus
                 placeholder="Ej. Psicología social"
                 value={courseName}
                 onChange={(event) =>
-                  setCourseName(event.target.value)
+                  setCourseName(
+                    event.target.value
+                  )
                 }
               />
             </label>
 
             <label>
               Color del curso
+
               <input
                 type="color"
                 value={courseColor}
                 onChange={(event) =>
-                  setCourseColor(event.target.value)
+                  setCourseColor(
+                    event.target.value
+                  )
                 }
               />
             </label>
 
+            <div
+              className="edit-course-preview"
+              style={{
+                background: courseColor
+              }}
+            >
+              <BookOpen size={25} />
+
+              <strong>
+                {courseName ||
+                  "Nombre del curso"}
+              </strong>
+            </div>
+
             <button
               className="primary-button"
               onClick={createCourse}
+              disabled={
+                !courseName.trim()
+              }
             >
+              <Plus size={18} />
               Crear curso
             </button>
           </div>
         </Modal>
       )}
 
-      {showMaterialModal && course && (
+      {/* =========================
+          MODAL EDITAR CURSO
+      ========================= */}
+
+      {showEditCourseModal && (
         <Modal
-          title="Agregar material"
-          close={() => setShowMaterialModal(false)}
+          title="Editar curso"
+          close={() =>
+            setShowEditCourseModal(false)
+          }
         >
           <div className="form">
             <label>
-              Archivo
+              Nombre del curso
+
               <input
-                type="file"
-                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,image/*"
-                onChange={(event) => {
-                  const file = event.target.files?.[0];
-
-                  if (file) {
-                    setMaterialTitle(file.name);
-                  }
-
-                  event.currentTarget.selectedFile =
-                    file || null;
-                }}
-              />
-            </label>
-
-            <label>
-              Nombre
-              <input
-                placeholder="Ej. Clase 4"
-                value={materialTitle}
+                autoFocus
+                placeholder="Ej. Psicología social"
+                value={editCourseName}
                 onChange={(event) =>
-                  setMaterialTitle(event.target.value)
+                  setEditCourseName(
+                    event.target.value
+                  )
                 }
               />
             </label>
 
             <label>
-              Tema
+              Color del curso
+
               <input
-                placeholder="Ej. Memoria"
-                value={materialTopic}
+                type="color"
+                value={editCourseColor}
                 onChange={(event) =>
-                  setMaterialTopic(event.target.value)
+                  setEditCourseColor(
+                    event.target.value
+                  )
                 }
               />
             </label>
 
-            <label>
-              Tipo
-              <select
-                value={materialType}
-                onChange={(event) =>
-                  setMaterialType(event.target.value)
-                }
-              >
-                <option>Apunte</option>
-                <option>PDF</option>
-                <option>Lectura</option>
-                <option>Diapositivas</option>
-                <option>Foto</option>
-                <option>Otro</option>
-              </select>
-            </label>
+            <div
+              className="edit-course-preview"
+              style={{
+                background:
+                  editCourseColor
+              }}
+            >
+              <BookOpen size={25} />
+
+              <strong>
+                {editCourseName ||
+                  "Nombre del curso"}
+              </strong>
+            </div>
 
             <button
               className="primary-button"
-              onClick={(event) => {
-                const input =
-                  event.currentTarget.parentElement.querySelector(
-                    'input[type="file"]'
-                  );
-
-                const file = input?.files?.[0];
-
-                if (!file) {
-                  alert("Selecciona un archivo primero.");
-                  return;
-                }
-
-                addMaterial(file);
-              }}
+              onClick={
+                saveCourseChanges
+              }
+              disabled={
+                !editCourseName.trim()
+              }
             >
-              Guardar material
+              <Check size={18} />
+              Guardar cambios
             </button>
           </div>
         </Modal>
       )}
+
+      {/* =========================
+          MODAL MATERIAL
+      ========================= */}
+
+      {showMaterialModal &&
+        course && (
+          <Modal
+            title="Agregar material"
+            close={() =>
+              setShowMaterialModal(
+                false
+              )
+            }
+          >
+            <div className="form">
+              <label>
+                Archivo
+
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,image/*"
+                  onChange={(event) => {
+                    const file =
+                      event.target.files?.[0];
+
+                    if (file) {
+                      setMaterialTitle(
+                        file.name
+                      );
+                    }
+                  }}
+                />
+              </label>
+
+              <label>
+                Nombre
+
+                <input
+                  placeholder="Ej. Clase 4"
+                  value={materialTitle}
+                  onChange={(event) =>
+                    setMaterialTitle(
+                      event.target.value
+                    )
+                  }
+                />
+              </label>
+
+              <label>
+                Tema
+
+                <input
+                  placeholder="Ej. Memoria"
+                  value={materialTopic}
+                  onChange={(event) =>
+                    setMaterialTopic(
+                      event.target.value
+                    )
+                  }
+                />
+              </label>
+
+              <label>
+                Tipo
+
+                <select
+                  value={materialType}
+                  onChange={(event) =>
+                    setMaterialType(
+                      event.target.value
+                    )
+                  }
+                >
+                  <option>
+                    Apunte
+                  </option>
+
+                  <option>
+                    PDF
+                  </option>
+
+                  <option>
+                    Lectura
+                  </option>
+
+                  <option>
+                    Diapositivas
+                  </option>
+
+                  <option>
+                    Foto
+                  </option>
+
+                  <option>
+                    Otro
+                  </option>
+                </select>
+              </label>
+
+              <button
+                className="primary-button"
+                onClick={(event) => {
+                  const input =
+                    event.currentTarget.parentElement.querySelector(
+                      'input[type="file"]'
+                    );
+
+                  const file =
+                    input?.files?.[0];
+
+                  if (!file) {
+                    alert(
+                      "Selecciona un archivo primero."
+                    );
+
+                    return;
+                  }
+
+                  addMaterial(file);
+                }}
+              >
+                Guardar material
+              </button>
+            </div>
+          </Modal>
+        )}
     </div>
   );
 }
 
-function NavItem({ icon, text, active, onClick }) {
+// =====================================================
+// NAVEGACIÓN
+// =====================================================
+
+function NavItem({
+  icon,
+  text,
+  active,
+  onClick
+}) {
   return (
     <button
-      className={`nav-item ${active ? "active" : ""}`}
+      className={`nav-item ${
+        active ? "active" : ""
+      }`}
       onClick={onClick}
     >
       {icon}
@@ -500,19 +846,27 @@ function NavItem({ icon, text, active, onClick }) {
   );
 }
 
+// =====================================================
+// INICIO
+// =====================================================
+
 function Home({
   data,
   setPage,
   setShowCourseModal,
-  setSelectedCourse
+  setSelectedCourse,
+  onEditCourse
 }) {
-  const totalMaterials = data.materials.length;
+  const totalMaterials =
+    data.materials.length;
 
   return (
     <section>
       <div className="hero">
         <div>
-          <span className="eyebrow">TU ESPACIO ACADÉMICO 🌷</span>
+          <span className="eyebrow">
+            TU ESPACIO ACADÉMICO 🌷
+          </span>
 
           <h1>
             Hola
@@ -523,14 +877,17 @@ function Home({
           </h1>
 
           <p>
-            Organiza tus cursos, guarda tus materiales y
-            convierte todo lo que estudias en conocimiento.
+            Organiza tus cursos, guarda tus
+            materiales y convierte todo lo que
+            estudias en conocimiento.
           </p>
 
           <div className="hero-actions">
             <button
               className="primary-button"
-              onClick={() => setShowCourseModal(true)}
+              onClick={() =>
+                setShowCourseModal(true)
+              }
             >
               <Plus size={18} />
               Crear curso
@@ -538,7 +895,9 @@ function Home({
 
             <button
               className="secondary-button"
-              onClick={() => setPage("study")}
+              onClick={() =>
+                setPage("study")
+              }
             >
               <Brain size={18} />
               Empezar a estudiar
@@ -547,15 +906,23 @@ function Home({
         </div>
 
         <div className="hero-art">
-          <div className="flower">✿</div>
+          <div className="flower">
+            ✿
+          </div>
+
           <Brain size={75} />
         </div>
       </div>
 
       <div className="section-header">
         <div>
-          <h2>Tu espacio de estudio</h2>
-          <p>Todo organizado en un solo lugar.</p>
+          <h2>
+            Tu espacio de estudio
+          </h2>
+
+          <p>
+            Todo organizado en un solo lugar.
+          </p>
         </div>
       </div>
 
@@ -588,15 +955,21 @@ function Home({
       <div className="section-header">
         <div>
           <h2>Mis cursos</h2>
-          <p>Continúa donde lo dejaste.</p>
+
+          <p>
+            Continúa donde lo dejaste.
+          </p>
         </div>
 
         {data.courses.length > 0 && (
           <button
             className="text-button"
-            onClick={() => setPage("courses")}
+            onClick={() =>
+              setPage("courses")
+            }
           >
-            Ver todos <ChevronRight size={16} />
+            Ver todos
+            <ChevronRight size={16} />
           </button>
         )}
       </div>
@@ -607,37 +980,55 @@ function Home({
           title="Todavía no tienes cursos"
           text="Crea tu primer curso y empieza a construir tu espacio académico."
           button="Crear mi primer curso"
-          onClick={() => setShowCourseModal(true)}
+          onClick={() =>
+            setShowCourseModal(true)
+          }
         />
       ) : (
         <div className="course-grid">
-          {data.courses.slice(0, 4).map((course) => (
-            <CourseCard
-              key={course.id}
-              course={course}
-              materials={
-                data.materials.filter(
-                  (item) => item.courseId === course.id
-                ).length
-              }
-              onClick={() => {
-                setSelectedCourse(course.id);
-                setPage("course");
-              }}
-            />
-          ))}
+          {data.courses
+            .slice(0, 4)
+            .map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                materials={
+                  data.materials.filter(
+                    (item) =>
+                      item.courseId ===
+                      course.id
+                  ).length
+                }
+                onClick={() => {
+                  setSelectedCourse(
+                    course.id
+                  );
+
+                  setPage("course");
+                }}
+                onEdit={() =>
+                  onEditCourse(course)
+                }
+              />
+            ))}
         </div>
       )}
     </section>
   );
 }
 
+// =====================================================
+// MIS CURSOS
+// =====================================================
+
 function Courses({
   courses,
+  data,
   setSelectedCourse,
   setPage,
   setShowCourseModal,
-  deleteCourse
+  deleteCourse,
+  onEditCourse
 }) {
   return (
     <section>
@@ -648,7 +1039,9 @@ function Courses({
       >
         <button
           className="primary-button"
-          onClick={() => setShowCourseModal(true)}
+          onClick={() =>
+            setShowCourseModal(true)
+          }
         >
           <Plus size={18} />
           Nuevo curso
@@ -661,7 +1054,9 @@ function Courses({
           title="No encontramos cursos"
           text="Crea uno para empezar."
           button="Crear curso"
-          onClick={() => setShowCourseModal(true)}
+          onClick={() =>
+            setShowCourseModal(true)
+          }
         />
       ) : (
         <div className="course-grid large">
@@ -669,11 +1064,26 @@ function Courses({
             <CourseCard
               key={course.id}
               course={course}
+              materials={
+                data.materials.filter(
+                  (item) =>
+                    item.courseId ===
+                    course.id
+                ).length
+              }
               onClick={() => {
-                setSelectedCourse(course.id);
+                setSelectedCourse(
+                  course.id
+                );
+
                 setPage("course");
               }}
-              onDelete={() => deleteCourse(course.id)}
+              onEdit={() =>
+                onEditCourse(course)
+              }
+              onDelete={() =>
+                deleteCourse(course.id)
+              }
             />
           ))}
         </div>
@@ -682,44 +1092,85 @@ function Courses({
   );
 }
 
+// =====================================================
+// TARJETA DE CURSO
+// =====================================================
+
 function CourseCard({
   course,
   materials = 0,
   onClick,
-  onDelete
+  onDelete,
+  onEdit
 }) {
   return (
     <article className="course-card">
-      <button className="course-main" onClick={onClick}>
+      <button
+        className="course-main"
+        onClick={onClick}
+      >
         <div
           className="course-color"
-          style={{ background: course.color }}
+          style={{
+            background: course.color
+          }}
         >
           <BookOpen size={25} />
         </div>
 
         <div>
           <h3>{course.name}</h3>
+
           <p>
-            {materials} {materials === 1 ? "material" : "materiales"}
+            {materials}{" "}
+            {materials === 1
+              ? "material"
+              : "materiales"}
           </p>
         </div>
 
-        <ChevronRight size={19} className="arrow" />
+        <ChevronRight
+          size={19}
+          className="arrow"
+        />
       </button>
 
-      {onDelete && (
-        <button
-          className="delete-course"
-          onClick={onDelete}
-          title="Eliminar curso"
-        >
-          <Trash2 size={16} />
-        </button>
-      )}
+      <div className="course-card-actions">
+        {onEdit && (
+          <button
+            className="icon-button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onEdit();
+            }}
+            title="Editar curso"
+            aria-label={`Editar ${course.name}`}
+          >
+            <Pencil size={16} />
+          </button>
+        )}
+
+        {onDelete && (
+          <button
+            className="icon-button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete();
+            }}
+            title="Eliminar curso"
+            aria-label={`Eliminar ${course.name}`}
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
+      </div>
     </article>
   );
 }
+
+// =====================================================
+// PÁGINA DEL CURSO
+// =====================================================
 
 function CoursePage({
   course,
@@ -727,21 +1178,29 @@ function CoursePage({
   setPage,
   setShowMaterialModal,
   addNote,
-  removeMaterial
+  removeMaterial,
+  onEditCourse
 }) {
-  const [note, setNote] = useState("");
+  const [note, setNote] =
+    useState("");
 
-  const materials = data.materials.filter(
-    (item) => item.courseId === course.id
-  );
+  const materials =
+    data.materials.filter(
+      (item) =>
+        item.courseId === course.id
+    );
 
-  const notes = data.notes.filter(
-    (item) => item.courseId === course.id
-  );
+  const notes =
+    data.notes.filter(
+      (item) =>
+        item.courseId === course.id
+    );
 
   const topics = [
     ...new Set(
-      materials.map((item) => item.topic).filter(Boolean)
+      materials
+        .map((item) => item.topic)
+        .filter(Boolean)
     )
   ];
 
@@ -749,7 +1208,9 @@ function CoursePage({
     <section>
       <button
         className="back-button"
-        onClick={() => setPage("courses")}
+        onClick={() =>
+          setPage("courses")
+        }
       >
         ← Mis cursos
       </button>
@@ -764,41 +1225,80 @@ function CoursePage({
           <BookOpen size={30} />
         </div>
 
-        <div>
-          <span className="eyebrow">CURSO</span>
+        <div className="course-header-info">
+          <span className="eyebrow">
+            CURSO
+          </span>
+
           <h1>{course.name}</h1>
+
           <p>
-            {materials.length} materiales · {topics.length} temas
+            {materials.length} materiales ·{" "}
+            {topics.length} temas
           </p>
         </div>
+
+        <button
+          className="secondary-button course-edit-button"
+          onClick={() =>
+            onEditCourse(course)
+          }
+        >
+          <Pencil size={17} />
+          Editar curso
+        </button>
       </div>
 
       <div className="quick-actions">
         <button
           className="action-card"
-          onClick={() => setShowMaterialModal(true)}
+          onClick={() =>
+            setShowMaterialModal(true)
+          }
         >
           <Upload />
-          <strong>Agregar material</strong>
-          <span>PDF, foto, documento...</span>
+
+          <strong>
+            Agregar material
+          </strong>
+
+          <span>
+            PDF, foto, documento...
+          </span>
         </button>
 
         <button
           className="action-card"
-          onClick={() => setPage("study")}
+          onClick={() =>
+            setPage("study")
+          }
         >
           <Brain />
-          <strong>Estudiar</strong>
-          <span>Repasa este curso</span>
+
+          <strong>
+            Estudiar
+          </strong>
+
+          <span>
+            Repasa este curso
+          </span>
         </button>
 
         <button
           className="action-card"
-          onClick={() => setPage("quizzes")}
+          onClick={() =>
+            setPage("quizzes")
+          }
         >
           <Target />
-          <strong>Cuestionario</strong>
-          <span>Practica lo aprendido</span>
+
+          <strong>
+            Cuestionario
+          </strong>
+
+          <span>
+            Practica lo aprendido
+          </span>
         </button>
       </div>
 
@@ -811,35 +1311,58 @@ function CoursePage({
 
           {materials.length === 0 ? (
             <EmptyState
-              icon={<FileText size={30} />}
+              icon={
+                <FileText size={30} />
+              }
               title="Todavía no hay materiales"
               text="Sube tus apuntes, PDFs o fotografías."
               button="Agregar material"
-              onClick={() => setShowMaterialModal(true)}
+              onClick={() =>
+                setShowMaterialModal(
+                  true
+                )
+              }
             />
           ) : (
             <div className="material-list">
-              {materials.map((material) => (
-                <div className="material-item" key={material.id}>
-                  <div className="material-icon">
-                    <FileText size={20} />
-                  </div>
-
-                  <div>
-                    <strong>{material.title}</strong>
-                    <span>
-                      {material.topic} · {material.type}
-                    </span>
-                  </div>
-
-                  <button
-                    className="icon-button"
-                    onClick={() => removeMaterial(material.id)}
+              {materials.map(
+                (material) => (
+                  <div
+                    className="material-item"
+                    key={material.id}
                   >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
+                    <div className="material-icon">
+                      <FileText
+                        size={20}
+                      />
+                    </div>
+
+                    <div>
+                      <strong>
+                        {material.title}
+                      </strong>
+
+                      <span>
+                        {material.topic} ·{" "}
+                        {material.type}
+                      </span>
+                    </div>
+
+                    <button
+                      className="icon-button"
+                      onClick={() =>
+                        removeMaterial(
+                          material.id
+                        )
+                      }
+                    >
+                      <Trash2
+                        size={16}
+                      />
+                    </button>
+                  </div>
+                )
+              )}
             </div>
           )}
         </div>
@@ -854,7 +1377,11 @@ function CoursePage({
             <textarea
               placeholder="Escribe algo que quieras recordar..."
               value={note}
-              onChange={(event) => setNote(event.target.value)}
+              onChange={(event) =>
+                setNote(
+                  event.target.value
+                )
+              }
             />
 
             <button
@@ -870,8 +1397,13 @@ function CoursePage({
 
           <div className="notes-list">
             {notes.map((item) => (
-              <div className="note" key={item.id}>
-                <span>{item.text}</span>
+              <div
+                className="note"
+                key={item.id}
+              >
+                <span>
+                  {item.text}
+                </span>
               </div>
             ))}
           </div>
@@ -880,6 +1412,10 @@ function CoursePage({
     </section>
   );
 }
+
+// =====================================================
+// ESTUDIAR
+// =====================================================
 
 function StudyPage() {
   return (
@@ -921,11 +1457,15 @@ function StudyPage() {
         <Sparkles size={28} />
 
         <div>
-          <h3>Tu asistente académico está creciendo ✨</h3>
+          <h3>
+            Tu asistente académico está creciendo ✨
+          </h3>
+
           <p>
-            Próximamente podremos conectar inteligencia
-            artificial para leer tus PDFs, fotografías y
-            documentos y generar resúmenes, preguntas y
+            Próximamente podremos conectar
+            inteligencia artificial para leer tus
+            PDFs, fotografías y documentos y
+            generar resúmenes, preguntas y
             explicaciones basadas en ellos.
           </p>
         </div>
@@ -934,8 +1474,13 @@ function StudyPage() {
   );
 }
 
+// =====================================================
+// CUESTIONARIOS
+// =====================================================
+
 function QuizPage() {
-  const [difficulty, setDifficulty] = useState("Medio");
+  const [difficulty, setDifficulty] =
+    useState("Medio");
 
   return (
     <section>
@@ -950,27 +1495,37 @@ function QuizPage() {
           <Target size={32} />
         </div>
 
-        <h2>Crear cuestionario</h2>
+        <h2>
+          Crear cuestionario
+        </h2>
 
         <p>
-          En la versión inteligente, las preguntas se
-          generarán utilizando tus propios materiales.
+          En la versión inteligente, las
+          preguntas se generarán utilizando
+          tus propios materiales.
         </p>
 
         <div className="difficulty">
-          {["Fácil", "Medio", "Difícil", "Examen"].map(
-            (item) => (
-              <button
-                key={item}
-                className={
-                  difficulty === item ? "selected" : ""
-                }
-                onClick={() => setDifficulty(item)}
-              >
-                {item}
-              </button>
-            )
-          )}
+          {[
+            "Fácil",
+            "Medio",
+            "Difícil",
+            "Examen"
+          ].map((item) => (
+            <button
+              key={item}
+              className={
+                difficulty === item
+                  ? "selected"
+                  : ""
+              }
+              onClick={() =>
+                setDifficulty(item)
+              }
+            >
+              {item}
+            </button>
+          ))}
         </div>
 
         <button className="primary-button">
@@ -982,6 +1537,10 @@ function QuizPage() {
   );
 }
 
+// =====================================================
+// FLASHCARDS
+// =====================================================
+
 function FlashcardsPage() {
   return (
     <section>
@@ -992,13 +1551,19 @@ function FlashcardsPage() {
       />
 
       <EmptyState
-        icon={<Lightbulb size={32} />}
+        icon={
+          <Lightbulb size={32} />
+        }
         title="Todavía no tienes flashcards"
         text="Cuando conectemos el asistente inteligente podrá convertir automáticamente tus apuntes en tarjetas."
       />
     </section>
   );
 }
+
+// =====================================================
+// PLANIFICADOR
+// =====================================================
 
 function PlannerPage() {
   return (
@@ -1017,9 +1582,15 @@ function PlannerPage() {
           "Jueves",
           "Viernes"
         ].map((day) => (
-          <div className="day" key={day}>
+          <div
+            className="day"
+            key={day}
+          >
             <strong>{day}</strong>
-            <span>Sin sesiones programadas</span>
+
+            <span>
+              Sin sesiones programadas
+            </span>
           </div>
         ))}
       </div>
@@ -1027,12 +1598,23 @@ function PlannerPage() {
   );
 }
 
-function ProfilePage({ data, setData }) {
-  const [name, setName] = useState(data.profile.name);
+// =====================================================
+// PERFIL
+// =====================================================
+
+function ProfilePage({
+  data,
+  setData
+}) {
+  const [name, setName] =
+    useState(
+      data.profile.name
+    );
 
   function save() {
     setData((current) => ({
       ...current,
+
       profile: {
         ...current.profile,
         name
@@ -1050,19 +1632,31 @@ function ProfilePage({ data, setData }) {
 
       <div className="profile-card">
         <div className="avatar-large">
-          {name ? name.charAt(0).toUpperCase() : "♡"}
+          {name
+            ? name
+                .charAt(0)
+                .toUpperCase()
+            : "♡"}
         </div>
 
         <label>
           Tu nombre
+
           <input
             placeholder="Escribe tu nombre"
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            onChange={(event) =>
+              setName(
+                event.target.value
+              )
+            }
           />
         </label>
 
-        <button className="primary-button" onClick={save}>
+        <button
+          className="primary-button"
+          onClick={save}
+        >
           <Check size={18} />
           Guardar
         </button>
@@ -1071,24 +1665,45 @@ function ProfilePage({ data, setData }) {
   );
 }
 
-function StudyCard({ icon, title, text, soon }) {
+// =====================================================
+// COMPONENTES
+// =====================================================
+
+function StudyCard({
+  icon,
+  title,
+  text,
+  soon
+}) {
   return (
     <div className="study-card">
-      <div className="study-icon">{icon}</div>
+      <div className="study-icon">
+        {icon}
+      </div>
 
       <h3>{title}</h3>
 
       <p>{text}</p>
 
-      {soon && <span className="soon">PRÓXIMAMENTE</span>}
+      {soon && (
+        <span className="soon">
+          PRÓXIMAMENTE
+        </span>
+      )}
     </div>
   );
 }
 
-function Stat({ icon, number, label }) {
+function Stat({
+  icon,
+  number,
+  label
+}) {
   return (
     <div className="stat">
-      <div className="stat-icon">{icon}</div>
+      <div className="stat-icon">
+        {icon}
+      </div>
 
       <div>
         <strong>{number}</strong>
@@ -1098,12 +1713,21 @@ function Stat({ icon, number, label }) {
   );
 }
 
-function PageTitle({ eyebrow, title, text, children }) {
+function PageTitle({
+  eyebrow,
+  title,
+  text,
+  children
+}) {
   return (
     <div className="page-title">
       <div>
-        <span className="eyebrow">{eyebrow}</span>
+        <span className="eyebrow">
+          {eyebrow}
+        </span>
+
         <h1>{title}</h1>
+
         <p>{text}</p>
       </div>
 
@@ -1112,7 +1736,10 @@ function PageTitle({ eyebrow, title, text, children }) {
   );
 }
 
-function SectionTitle({ title, text }) {
+function SectionTitle({
+  title,
+  text
+}) {
   return (
     <div className="section-title">
       <h2>{title}</h2>
@@ -1130,14 +1757,19 @@ function EmptyState({
 }) {
   return (
     <div className="empty">
-      <div className="empty-icon">{icon}</div>
+      <div className="empty-icon">
+        {icon}
+      </div>
 
       <h3>{title}</h3>
 
       <p>{text}</p>
 
       {button && (
-        <button className="primary-button" onClick={onClick}>
+        <button
+          className="primary-button"
+          onClick={onClick}
+        >
           <Plus size={18} />
           {button}
         </button>
@@ -1146,17 +1778,29 @@ function EmptyState({
   );
 }
 
-function Modal({ title, close, children }) {
+function Modal({
+  title,
+  close,
+  children
+}) {
   return (
-    <div className="modal-background" onMouseDown={close}>
+    <div
+      className="modal-background"
+      onMouseDown={close}
+    >
       <div
         className="modal"
-        onMouseDown={(event) => event.stopPropagation()}
+        onMouseDown={(event) =>
+          event.stopPropagation()
+        }
       >
         <div className="modal-header">
           <h2>{title}</h2>
 
-          <button className="icon-button" onClick={close}>
+          <button
+            className="icon-button"
+            onClick={close}
+          >
             <X size={20} />
           </button>
         </div>
@@ -1167,7 +1811,13 @@ function Modal({ title, close, children }) {
   );
 }
 
-createRoot(document.getElementById("root")).render(
+// =====================================================
+// REACT
+// =====================================================
+
+createRoot(
+  document.getElementById("root")
+).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
