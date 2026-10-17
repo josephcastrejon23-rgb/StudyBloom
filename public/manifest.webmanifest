@@ -1,0 +1,10 @@
+{
+  "name": "StudyBloom",
+  "short_name": "StudyBloom",
+  "description": "Tu asistente académico personal",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#fff8fb",
+  "theme_color": "#f7dce8",
+  "orientation": "portrait"
+}
