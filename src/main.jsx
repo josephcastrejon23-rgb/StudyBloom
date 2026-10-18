@@ -17,7 +17,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 const STORAGE_KEY = "studybloom-data";
 const FILE_DB_NAME = "studybloom-files";
 const FILE_STORE_NAME = "files";
-const AI_API_URL = "https://studybloom-api-s83v.vercel.app/api/ai";
+const AI_API_URL = "https://studybloom-api-s83h.vercel.app/api/ai";
 
 const starterData = {
   profile: { name: "" },
